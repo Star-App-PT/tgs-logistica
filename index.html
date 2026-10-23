@@ -26,6 +26,7 @@ img{display:block}
   transform:translate(calc(var(--x) / -1125 * 100%),calc(var(--y) / -1330 * 100%))}
 .logo{--x:55;--y:90;--w:365;--h:172}
 .logo img{mix-blend-mode:multiply;filter:brightness(1.12) contrast(1.2)}
+.logo-clean img{display:block;width:100%;height:auto}
 .scene{--x:520;--y:0;--w:605;--h:940}
 .van{--x:130;--y:570;--w:690;--h:320}
 .boxes{--x:820;--y:690;--w:260;--h:240}
@@ -289,6 +290,32 @@ footer .wrap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
 
 <script>
 document.getElementById('y').textContent=new Date().getFullYear();
+// Cut the logo out of the flyer and make its grey background transparent,
+// so it sits on the page colour with no visible box.
+(function(){
+  const src='1792700310720_image.png', X=55,Y=90,W=365,H=172;
+  const im=new Image();
+  im.onload=function(){
+    const c=document.createElement('canvas'), k=2; c.width=W*k; c.height=H*k;
+    const g=c.getContext('2d'); g.imageSmoothingQuality='high';
+    g.drawImage(im,X,Y,W,H,0,0,W*k,H*k);
+    let d; try{d=g.getImageData(0,0,c.width,c.height);}catch(e){return;}
+    const a=d.data;
+    for(let i=0;i<a.length;i+=4){
+      const m=Math.min(a[i],a[i+1],a[i+2]);
+      if(m>=236){a[i+3]=0;}
+      else if(m>196){a[i+3]=Math.round(255*(236-m)/40);}
+    }
+    g.putImageData(d,0,0);
+    const url=c.toDataURL('image/png');
+    document.querySelectorAll('.crop.logo').forEach(el=>{
+      el.classList.remove('crop','logo'); el.classList.add('logo-clean');
+      el.innerHTML='<img src="'+url+'" alt="TGS Logística">';
+    });
+  };
+  im.src=src;
+})();
+
 const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.12});
 document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
 document.querySelectorAll('.links a').forEach(a=>a.addEventListener('click',()=>document.getElementById('links').classList.remove('open')));
